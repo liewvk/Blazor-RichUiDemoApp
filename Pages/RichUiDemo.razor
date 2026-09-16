@@ -1,0 +1,286 @@
+﻿@page "/rich-ui-demo"
+
+@using Microsoft.AspNetCore.Components.Forms
+
+<PageTitle>Rich UI Demo</PageTitle>
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+        <div>
+            <h1>Student Dashboard</h1>
+
+            <p>
+                View student statistics and manage
+                student documents.
+            </p>
+        </div>
+    </div>
+
+    <div class="stats-row">
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                👨‍🎓
+            </div>
+
+            <div>
+                <h4>Total Students</h4>
+                <p>1,245</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                📚
+            </div>
+
+            <div>
+                <h4>Active Courses</h4>
+                <p>18</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                ✅
+            </div>
+
+            <div>
+                <h4>Active Students</h4>
+                <p>1,102</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-grid">
+
+        <div class="upload-panel">
+
+            <h3>Upload Student Document</h3>
+
+            <p class="description">
+                Select a PDF or image file.
+            </p>
+
+            <InputFile OnChange="HandleFileSelected"
+                       accept=".pdf,.jpg,.jpeg,.png" />
+
+            <div class="file-status">
+                @uploadMessage
+            </div>
+
+            @if (selectedFile != null)
+            {
+                <div class="file-details">
+
+                    <p>
+                        <strong>File:</strong>
+                        @selectedFile.Name
+                    </p>
+
+                    <p>
+                        <strong>Type:</strong>
+                        @selectedFile.ContentType
+                    </p>
+
+                    <p>
+                        <strong>Size:</strong>
+                        @FormatFileSize(selectedFile.Size)
+                    </p>
+
+                </div>
+            }
+
+        </div>
+
+        <div class="help-panel">
+
+            <h3>Need Help?</h3>
+
+            <p>
+                View information about the file types
+                accepted by this application.
+            </p>
+
+            <button class="help-button"
+                    @onclick="ShowModal">
+                Open Help
+            </button>
+
+        </div>
+
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(notification))
+    {
+        <div class="notification-box">
+
+            <span class="notification-icon">
+                ✓
+            </span>
+
+            <span>
+                @notification
+            </span>
+
+            <button class="notification-close"
+                    @onclick="ClearNotification">
+                ×
+            </button>
+
+        </div>
+    }
+
+</div>
+
+@if (isModalVisible)
+{
+    <div class="modal-overlay"
+         @onclick="HideModal">
+
+        <div class="modal-box"
+             @onclick:stopPropagation="true">
+
+            <div class="modal-header">
+
+                <h3>Upload Help</h3>
+
+                <button class="modal-close"
+                        @onclick="HideModal">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <p>
+                    You can select the following
+                    document types:
+                </p>
+
+                <ul>
+                    <li>PDF documents</li>
+                    <li>JPEG images</li>
+                    <li>PNG images</li>
+                </ul>
+
+                <p>
+                    The maximum file size for this
+                    demonstration is 5 MB.
+                </p>
+
+                <p>
+                    Selecting a file prepares it for
+                    upload. This example does not send
+                    the file to a server.
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="close-button"
+                        @onclick="HideModal">
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    private string uploadMessage =
+        "No file selected.";
+
+    private string notification = "";
+
+    private bool isModalVisible = false;
+
+    private IBrowserFile? selectedFile;
+
+    private const long MaxFileSize =
+        5 * 1024 * 1024;
+
+    private void HandleFileSelected(
+        InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+
+        selectedFile = null;
+        notification = "";
+
+        bool validType =
+            file.ContentType == "application/pdf" ||
+            file.ContentType == "image/jpeg" ||
+            file.ContentType == "image/png";
+
+        if (!validType)
+        {
+            uploadMessage =
+                "Invalid file type.";
+
+            notification =
+                "Please select a PDF, JPG, or PNG file.";
+
+            return;
+        }
+
+        if (file.Size > MaxFileSize)
+        {
+            uploadMessage =
+                "The selected file is too large.";
+
+            notification =
+                "Maximum file size is 5 MB.";
+
+            return;
+        }
+
+        selectedFile = file;
+
+        uploadMessage =
+            $"Selected file: {file.Name}";
+
+        notification =
+            "File ready for upload.";
+    }
+
+    private void ShowModal()
+    {
+        isModalVisible = true;
+    }
+
+    private void HideModal()
+    {
+        isModalVisible = false;
+    }
+
+    private void ClearNotification()
+    {
+        notification = "";
+    }
+
+    private static string FormatFileSize(
+        long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} bytes";
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return $"{bytes / 1024.0:F1} KB";
+        }
+
+        return
+            $"{bytes / (1024.0 * 1024.0):F1} MB";
+    }
+}
